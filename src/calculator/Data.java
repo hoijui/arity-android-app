@@ -18,7 +18,7 @@ class Data {
         o.ys = ys;
         o.size = size;
         o.allocSize = allocSize;
-        
+
         xs = savex;
         ys = savey;
         size = ssize;
@@ -134,6 +134,7 @@ class Data {
         size += d.size-pos;
     }
 
+    @Override
     public String toString() {
         StringBuilder b = new StringBuilder();
         b.append(size).append(": ");

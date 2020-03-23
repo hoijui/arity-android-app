@@ -9,7 +9,7 @@ class TouchHandler {
     static interface TouchHandlerInterface {
         void onTouchDown(float x, float y);
         void onTouchMove(float x, float y);
-        void onTouchUp(float x, float y);    
+        void onTouchUp(float x, float y);
         void onTouchZoomDown(float x1, float y1, float x2, float y2);
         void onTouchZoomMove(float x1, float y1, float x2, float y2);
     }
@@ -17,7 +17,7 @@ class TouchHandler {
     VelocityTracker velocityTracker = VelocityTracker.obtain();
 
     private boolean isAfterZoom;
-    private TouchHandlerInterface listener;
+    private final TouchHandlerInterface listener;
 
     TouchHandler(TouchHandlerInterface listener) {
         this.listener = listener;

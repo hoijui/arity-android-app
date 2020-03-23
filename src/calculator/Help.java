@@ -7,10 +7,11 @@ import android.os.Bundle;
 import android.webkit.WebView;
 
 public class Help extends Activity {
+	@Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
         WebView view = new WebView(this);
         setContentView(view);
-        view.loadUrl("file:///android_asset/help.html");
-    }   
+        view.loadUrl("file:///android_asset/help.html"); // FIXME It should be "android_asset" -> "asset". probably better to use Class#getResource().toURL()
+    }
 }

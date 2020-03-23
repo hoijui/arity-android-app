@@ -2,41 +2,33 @@
 
 package calculator;
 
-import android.view.View;
-import android.view.MotionEvent;
-import android.widget.TextView;
-import android.widget.EditText;
 import android.content.Context;
-import android.text.Editable;
-
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.graphics.Paint.Style;
-import android.graphics.Bitmap;
-import android.graphics.Color;
-import android.graphics.Matrix;
-import android.graphics.Path;
-import android.graphics.Region;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
-
 import android.util.AttributeSet;
-import android.util.Log;
+import android.view.MotionEvent;
+import android.view.View;
 import arity.calculator.R;
 
 public class KeyboardView extends View {
+
+    private static final float DELTAY = 8;
+
     private char[][] keys;
     private int nLine, nCol;
-    private Paint downPaint = new Paint();
+    private final Paint downPaint = new Paint();
     private int width, height;
     private Bitmap bitmap;
     private boolean isDown;
     private float downX, downY;
     private int downLine, downCol;
     private float downCW, downCH;
-    private Rect rect = new Rect();
+    private final Rect rect = new Rect();
     private float cellw, cellh;
-    private Calculator calculator;
+    private final Calculator calculator;
     private KeyboardView aboveView;
     private boolean isLarge, isBottom;
 
@@ -45,9 +37,9 @@ public class KeyboardView extends View {
         downPaint.setAntiAlias(false);
         downPaint.setColor(0xffffffff);
         downPaint.setStyle(Paint.Style.STROKE);
-        calculator = (Calculator) context;        
+        calculator = (Calculator) context;
     }
-    
+
     void init(char[][] keys, boolean isLarge, boolean isBottom) {
         this.keys = keys;
         nLine = keys.length;
@@ -59,17 +51,18 @@ public class KeyboardView extends View {
     void setAboveView(KeyboardView aboveView) {
         this.aboveView = aboveView;
     }
-    
+
+    @Override
     protected void onSizeChanged(int w, int h, int ow, int oh) {
         width = w;
         height = isBottom ? h - 5 : h;
 
         bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
         Canvas canvas = new Canvas(bitmap);
-        
+
         cellw = width / (float) nCol;
         cellh = height / (float) nLine;
-        
+
         Paint textPaint = new Paint();
         textPaint.setAntiAlias(true);
         textPaint.setTextSize(isLarge ? 26 : 22);
@@ -92,7 +85,7 @@ public class KeyboardView extends View {
                 float cw = col < nCol-1 && c == lineKeys[col+1] ? cellw+cellw : cellw;
                 float ch = line < nLine-1 && c == keys[line+1][col] ? cellh+cellh : cellh;
                 final float x = x1 + cw/2;
-                final int backColor = (('a' <= c && c <= 'z') 
+                final int backColor = (('a' <= c && c <= 'z')
                                        || c == ' ' || c == Calculator.PI) ? 0xff404040 :
                     (('0' <= c && c <= '9') || c == '.') ? 0xff303030 :
                     (c == 'E' || c == 'C' || c == Calculator.ARROW) ? 0xff306060 : 0xff808080;
@@ -160,7 +153,7 @@ public class KeyboardView extends View {
         }
         return line;
     }
-    
+
     private int getCol(float x) {
         int col = (int) (x * nCol / width);
         if (col < 0) {
@@ -175,6 +168,7 @@ public class KeyboardView extends View {
         canvas.drawRect(x, y, x+downCW-.5f, y+downCH-.5f, downPaint);
     }
 
+    @Override
     protected void onDraw(Canvas canvas) {
         if (isDown) {
             float x1 = getX(downCol);
@@ -187,7 +181,7 @@ public class KeyboardView extends View {
         }
     }
 
-    private static final float DELTAY = 8;
+    @Override
     public boolean onTouchEvent(MotionEvent event) {
         int action = event.getAction();
         if (action == MotionEvent.ACTION_DOWN) {
@@ -225,7 +219,7 @@ public class KeyboardView extends View {
             return false;
         }
         return true;
-    }   
+    }
 
     private void invalidateCell(int line, int col) {
         float x1 = getX(col);

@@ -4,18 +4,15 @@ package calculator;
 
 import android.content.Context;
 import android.view.MotionEvent;
-import android.view.VelocityTracker;
 import android.widget.ZoomButtonsController;
 import android.util.AttributeSet;
-import org.javia.arity.Function;
 
 import android.opengl.Matrix;
 import javax.microedition.khronos.opengles.GL10;
 import javax.microedition.khronos.opengles.GL11;
-import javax.microedition.khronos.egl.EGLConfig;
 import org.javia.arity.Function;
 
-public class Graph3dView extends GLView implements 
+public class Graph3dView extends GLView implements
                                             Grapher,
                                             ZoomButtonsController.OnZoomListener,
                                             TouchHandler.TouchHandlerInterface
@@ -23,9 +20,9 @@ public class Graph3dView extends GLView implements
 
     private float lastTouchX, lastTouchY;
     private TouchHandler touchHandler;
-    private ZoomButtonsController zoomController = new ZoomButtonsController(this);
+    private final ZoomButtonsController zoomController = new ZoomButtonsController(this);
     private float zoomLevel = 1, targetZoom, zoomStep = 0, currentZoom;
-    private FPS fps = new FPS();
+    private final FPS fps = new FPS();
     private Graph3d graph;
 
     public Graph3dView(Context context, AttributeSet attrs) {
@@ -42,14 +39,16 @@ public class Graph3dView extends GLView implements
     private void init() {
         startLooping();
         zoomController.setOnZoomListener(this);
-        
+
         Matrix.setIdentityM(matrix1, 0);
         Matrix.rotateM(matrix1, 0, -75, 1, 0, 0);
     }
 
+    @Override
     public void onVisibilityChanged(boolean visible) {
     }
 
+    @Override
     public void onZoom(boolean zoomIn) {
         boolean changed = false;
         if (zoomIn) {
@@ -105,6 +104,7 @@ public class Graph3dView extends GLView implements
         super.onDetachedFromWindow();
     }
 
+    @Override
     public void onTouchDown(float x, float y) {
         zoomController.setVisible(true);
         stopLooping();
@@ -112,6 +112,7 @@ public class Graph3dView extends GLView implements
         lastTouchY = y;
     }
 
+    @Override
     public void onTouchMove(float x, float y) {
         float deltaX = x - lastTouchX;
         float deltaY = y - lastTouchY;
@@ -123,6 +124,7 @@ public class Graph3dView extends GLView implements
         }
     }
 
+    @Override
     public void onTouchUp(float x, float y) {
         float vx = touchHandler.velocityTracker.getXVelocity();
         float vy = touchHandler.velocityTracker.getYVelocity();
@@ -133,10 +135,12 @@ public class Graph3dView extends GLView implements
         }
     }
 
+    @Override
     public void onTouchZoomDown(float x1, float y1, float x2, float y2) {
 
     }
 
+    @Override
     public void onTouchZoomMove(float x1, float y1, float x2, float y2) {
 
     }
@@ -148,7 +152,7 @@ public class Graph3dView extends GLView implements
 
     // ----
 
-    private float[] matrix1 = new float[16], matrix2 = new float[16], matrix3 = new float[16];
+    private final float[] matrix1 = new float[16], matrix2 = new float[16], matrix3 = new float[16];
     private float angleX, angleY;
     private boolean isDirty;
     private Function function;
@@ -164,6 +168,7 @@ public class Graph3dView extends GLView implements
         return angleX < -limit || angleX > limit || angleY < -limit || angleY > limit;
     }
 
+    @Override
     public void setFunction(Function f) {
         function = f;
         zoomLevel = 1;
@@ -173,7 +178,7 @@ public class Graph3dView extends GLView implements
     @Override
     public void onSurfaceCreated(GL10 gl, int width, int height) {
         gl.glDisable(GL10.GL_DITHER);
-        gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT, GL10.GL_FASTEST);               
+        gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT, GL10.GL_FASTEST);
         gl.glClearColor(0, 0, 0, 1);
         gl.glShadeModel(Calculator.useHighQuality3d ? GL10.GL_SMOOTH : GL10.GL_FLAT);
         gl.glDisable(GL10.GL_LIGHTING);
@@ -181,12 +186,12 @@ public class Graph3dView extends GLView implements
         isDirty = true;
         angleX = .5f;
         angleY = 0;
-        
+
         gl.glViewport(0, 0, width, height);
         initFrustum(gl, DISTANCE * zoomLevel);
         currentZoom = zoomLevel;
     }
-    
+
     @Override
     public void onDrawFrame(GL10 gl10) {
         GL11 gl = (GL11) gl10;
@@ -244,10 +249,11 @@ public class Graph3dView extends GLView implements
     }
 
     private void printMatrix(float[] m, String name) {
-        StringBuffer b = new StringBuffer();
+        StringBuilder b = new StringBuilder();
+        b.append(name).append(' ');
         for (int i = 0; i < 16; ++i) {
             b.append(m[i]).append(' ');
         }
-        Calculator.log(name + ' ' + b.toString());
+        Calculator.log(b.toString());
     }
 }

@@ -8,14 +8,13 @@ import java.util.ArrayList;
 
 class History extends FileHandler {
     private static final int SIZE_LIMIT = 30;
-    ArrayList<HistoryEntry> entries = new ArrayList<HistoryEntry>();
+    ArrayList<HistoryEntry> entries = new ArrayList<>();
     int pos;
     HistoryEntry aboveTop = new HistoryEntry("", "");
 
-            
     History(Context context) {
-	super(context, "history", 1);
-	load();
+        super(context, "history", 1);
+        load();
     }
 
     void clear() {
@@ -27,23 +26,25 @@ class History extends FileHandler {
         return entries.size();
     }
 
+    @Override
     void doRead(DataInputStream is) throws IOException {
-	aboveTop = new HistoryEntry(is);
-	int loadSize = is.readInt();
-	for (int i = 0; i < loadSize; ++i) {                
-	    entries.add(new HistoryEntry(is));
-	}
-	pos = entries.size();
+        aboveTop = new HistoryEntry(is);
+        int loadSize = is.readInt();
+        for (int i = 0; i < loadSize; ++i) {
+            entries.add(new HistoryEntry(is));
+        }
+        pos = entries.size();
     }
 
+    @Override
     void doWrite(DataOutputStream os) throws IOException {
-	aboveTop.save(os);
-	os.writeInt(entries.size());
-	for (HistoryEntry entry : entries) {
-	    entry.save(os);
-	}
+        aboveTop.save(os);
+        os.writeInt(entries.size());
+        for (HistoryEntry entry : entries) {
+            entry.save(os);
+        }
     }
-    
+
     private HistoryEntry currentEntry() {
         if (pos < entries.size()) {
             return entries.get(pos);
@@ -57,9 +58,9 @@ class History extends FileHandler {
     }
 
     boolean onEnter(String text, String result) {
-	if (result == null) {
-	    result = "";
-	}
+    if (result == null) {
+        result = "";
+    }
         currentEntry().onEnter();
         pos = entries.size();
         if (text.length() == 0) {
@@ -80,8 +81,8 @@ class History extends FileHandler {
     }
 
     void moveToPos(int listPos, String text) {
-	currentEntry().editLine = text;
-	pos = entries.size() - listPos - 1;
+        currentEntry().editLine = text;
+        pos = entries.size() - listPos - 1;
     }
 
     void updateEdited(String text) {
@@ -96,7 +97,7 @@ class History extends FileHandler {
         ++pos;
         return true;
     }
-    
+
     boolean moveDown(String text) {
         updateEdited(text);
         if (pos <= 0) {
@@ -108,5 +109,5 @@ class History extends FileHandler {
 
     String getText() {
         return currentEntry().editLine;
-    }    
+    }
 }

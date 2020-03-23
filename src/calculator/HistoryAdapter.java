@@ -2,19 +2,17 @@
 
 package calculator;
 
+import android.content.Context;
+import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.view.View;
-import android.view.LayoutInflater;
-
-import android.content.Context;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
-
 import arity.calculator.R;
 
 class HistoryAdapter extends BaseAdapter {
-    private LayoutInflater inflater;
-    private History history;
+    private final LayoutInflater inflater;
+    private final History history;
 
     static class TagData {
         TextView input;
@@ -27,18 +25,22 @@ class HistoryAdapter extends BaseAdapter {
         inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
 
+    @Override
     public int getCount() {
         return history.entries.size();
     }
 
+    @Override
     public Object getItem(int position) {
         return null;
     }
 
+    @Override
     public long getItemId(int position) {
         return position;
     }
 
+    @Override
     public View getView(int pos, View view, ViewGroup parent) {
         if (view == null) {
             view = inflater.inflate(R.layout.history_line, parent, false);

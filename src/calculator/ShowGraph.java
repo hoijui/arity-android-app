@@ -21,6 +21,7 @@ public class ShowGraph extends Activity {
     private Grapher view;
     private GraphView graphView;
 
+    @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
         ArrayList<Function> funcs = Calculator.graphedFunction;
@@ -40,22 +41,26 @@ public class ShowGraph extends Activity {
         setContentView((View) view);
     }
 
+    @Override
     protected void onPause() {
         super.onPause();
         view.onPause();
     }
 
+    @Override
     protected void onResume() {
         super.onResume();
         view.onResume();
     }
 
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
         (new MenuInflater(this)).inflate(R.menu.graph, menu);
         return true;
     }
-    
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         super.onOptionsItemSelected(item);
         switch (item.getItemId()) {

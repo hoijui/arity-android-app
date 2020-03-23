@@ -1,15 +1,12 @@
 // Copyright (C) 2009 Mihai Preda
-  
+
 package calculator;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.widget.TextView;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.ArrayAdapter;
 import android.widget.AdapterView;
 import android.text.TextWatcher;
 import android.text.Editable;
@@ -19,27 +16,34 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.util.Log;
-import android.content.res.Resources;
 import android.content.res.Configuration;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-
 import java.util.ArrayList;
-
 import arity.calculator.R;
-
+import org.javia.arity.Complex;
+import org.javia.arity.Function;
+import org.javia.arity.FunctionAndName;
+import org.javia.arity.Symbols;
+import org.javia.arity.SyntaxException;
 import org.javia.arity.Util;
-import org.javia.arity.*;
 
-public class Calculator extends Activity implements TextWatcher, 
-						    View.OnKeyListener,
-                                                    View.OnClickListener,
-						    AdapterView.OnItemClickListener,
-                                                    SharedPreferences.OnSharedPreferenceChangeListener
+public class Calculator extends Activity implements TextWatcher,
+        View.OnKeyListener,
+        View.OnClickListener,
+        AdapterView.OnItemClickListener,
+        SharedPreferences.OnSharedPreferenceChangeListener
 {
-    static final char MINUS = '\u2212', TIMES = '\u00d7', DIV = '\u00f7', SQRT = '\u221a', PI = '\u03c0', 
-        UP_ARROW = '\u21e7', DN_ARROW = '\u21e9', ARROW = '\u21f3';
+    static final char
+            MINUS = '\u2212',
+            TIMES = '\u00d7',
+            DIV = '\u00f7',
+            SQRT = '\u221a',
+            PI = '\u03c0',
+            UP_ARROW = '\u21e7',
+            DN_ARROW = '\u21e9',
+            ARROW = '\u21f3';
 
     private static final int MSG_INPUT_CHANGED = 1;
     private static final String INFINITY = "Infinity";
@@ -54,14 +58,14 @@ public class Calculator extends Activity implements TextWatcher,
     private GraphView graphView;
     private Graph3dView graph3dView;
     private History history;
-    private HistoryAdapter adapter;   
+    private HistoryAdapter adapter;
     private int nDigits = 0;
     private boolean pendingClearResult;
     private boolean isAlphaVisible;
     private KeyboardView alpha, digits;
     static ArrayList<Function> graphedFunction;
     static Defs defs;
-    private ArrayList<Function> auxFuncs = new ArrayList<Function>();
+    private final ArrayList<Function> auxFuncs = new ArrayList<>();
     static boolean useHighQuality3d = true;
 
     private static final char[][] ALPHA = {
@@ -79,7 +83,7 @@ public class Calculator extends Activity implements TextWatcher,
     };
 
     private static final char[][] DIGITS2 = {
-        {'0', '.', '+', MINUS, TIMES, DIV, '^', '(', ')', 'C'},        
+        {'0', '.', '+', MINUS, TIMES, DIV, '^', '(', ')', 'C'},
         {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'E'},
     };
 
@@ -88,28 +92,29 @@ public class Calculator extends Activity implements TextWatcher,
         {'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'},
         {'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', PI},
         {'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '=', '%'},
-        {'0', '.', '+', MINUS, TIMES, DIV, '^', '(', ')', 'C'},        
+        {'0', '.', '+', MINUS, TIMES, DIV, '^', '(', ')', 'C'},
         {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'E'},
     };
     */
 
+    @Override
     public void onConfigurationChanged(Configuration config) {
         super.onConfigurationChanged(config);
         internalConfigChange(config);
     }
 
     private void internalConfigChange(Configuration config) {
-        setContentView(R.layout.main);  
+        setContentView(R.layout.main);
         graphView = (GraphView) findViewById(R.id.graph);
         graph3dView = (Graph3dView) findViewById(R.id.graph3d);
         historyView = (ListView) findViewById(R.id.history);
-              
+
         final boolean isLandscape = config.orientation == Configuration.ORIENTATION_LANDSCAPE;
         // final boolean hasKeyboard = config.hardKeyboardHidden == Configuration.HARDKEYBOARDHIDDEN_NO;
-        
+
         alpha = (KeyboardView) findViewById(R.id.alpha);
         digits = (KeyboardView) findViewById(R.id.digits);
-        if (isLandscape) {                        
+        if (isLandscape) {
             digits.init(DIGITS2, false, true);
             isAlphaVisible = false;
         } else {
@@ -124,9 +129,9 @@ public class Calculator extends Activity implements TextWatcher,
         input  = (EditText) findViewById(R.id.input);
         input.setOnKeyListener(this);
         input.addTextChangedListener(this);
-        input.setEditableFactory(new CalculatorEditable.Factory());            
+        input.setEditableFactory(new CalculatorEditable.Factory());
         input.setInputType(0);
-	changeInput(history.getText());
+        changeInput(history.getText());
         if (oldText != null) {
             input.setText(oldText);
         }
@@ -135,7 +140,7 @@ public class Calculator extends Activity implements TextWatcher,
         graph3dView.setOnClickListener(this);
         if (historyView != null) {
             historyView.setAdapter(adapter);
-	    historyView.setOnItemClickListener(this);
+            historyView.setOnItemClickListener(this);
         }
     }
 
@@ -145,22 +150,22 @@ public class Calculator extends Activity implements TextWatcher,
         history = new History(this);
         adapter = new HistoryAdapter(this, history);
         internalConfigChange(getResources().getConfiguration());
-        
-	defs = new Defs(this, symbols);
-	if (history.fileNotFound) {
-	    String[] init = {
-		"sqrt(pi)\u00f70.5!",
-		"e^(i\u00d7pi)",
-		"ln(e^100)",
-                "sin(x)",
-                "x^2"
-	    };
-	    nDigits = 10;
-	    for (String s : init) {
-		onEnter(s);
-	    }
-	    nDigits = 0;
-	}
+
+        defs = new Defs(this, symbols);
+        if (history.fileNotFound) {
+            String[] init = {
+            "sqrt(pi)\u00f70.5!",
+            "e^(i\u00d7pi)",
+            "ln(e^100)",
+                    "sin(x)",
+                    "x^2"
+            };
+            nDigits = 10;
+            for (String s : init) {
+            onEnter(s);
+            }
+            nDigits = 0;
+        }
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         prefs.registerOnSharedPreferenceChangeListener(this);
         String value = prefs.getString("quality", null);
@@ -168,116 +173,121 @@ public class Calculator extends Activity implements TextWatcher,
             useHighQuality3d = calculator.Util.SDK_VERSION >= 5;
             prefs.edit().putString("quality", useHighQuality3d ? "high" : "low").commit();
         } else {
-            useHighQuality3d = value.equals("high");   
+            useHighQuality3d = value.equals("high");
         }
     }
-    
+
+    @Override
     public void onPause() {
         super.onPause();
         graph3dView.onPause();
-	history.updateEdited(input.getText().toString());
+        history.updateEdited(input.getText().toString());
         history.save();
-	defs.save();
+        defs.save();
     }
 
+    @Override
     public void onResume() {
         super.onResume();
         graph3dView.onResume();
     }
 
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
         (new MenuInflater(this)).inflate(R.menu.main, menu);
         return true;
     }
-    
+
+    @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
         menu.findItem(R.id.clear_history).setEnabled(history.size() > 0);
         menu.findItem(R.id.list_defs).setEnabled(defs.size() > 0);
-        // menu.findItem(R.id.clear_defs).setEnabled(defs.size() > 0);
+        //menu.findItem(R.id.clear_defs).setEnabled(defs.size() > 0);
         return true;
     }
 
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-	super.onOptionsItemSelected(item);
-	int id = item.getItemId();
-	switch (id) {
-	case R.id.list_defs: {
-	    startActivity(new Intent(this, ListDefs.class));
-	    break;
-	}
+        super.onOptionsItemSelected(item);
+        int id = item.getItemId();
+        switch (id) {
+            case R.id.list_defs: {
+                startActivity(new Intent(this, ListDefs.class));
+                break;
+            }
+            case R.id.help:
+                startActivity(new Intent(this, Help.class));
+                break;
 
-        case R.id.help:
-            startActivity(new Intent(this, Help.class));
-            break;
+            case R.id.clear_history:
+                history.clear();
+                history.save();
+                adapter.notifyDataSetInvalidated();
+                break;
 
-        case R.id.clear_history:
-            history.clear();
-            history.save();
-            adapter.notifyDataSetInvalidated();
-            break;
+            case R.id.clear_defs:
+                defs.clear();
+                defs.save();
+                break;
 
-        case R.id.clear_defs:
-            defs.clear();
-            defs.save();
-            break;
+            case R.id.settings:
+                startActivity(new Intent(this, Settings.class));
+                break;
 
-        case R.id.settings:
-            startActivity(new Intent(this, Settings.class));
-            break;
-
-	default:
-	    return false;
-	}
-	return true;
+            default:
+                return false;
+        }
+        return true;
     }
 
-    //OnSharedPreferenceChangeListener
-    public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {       
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
         if (key.equals("quality")) {
             useHighQuality3d = prefs.getString(key, "high").equals("high");
             // Calculator.log("useHigh quality changed to " + useHighQuality3d);
         }
     }
 
-    //OnClickListener
+    @Override
     public void onClick(View target) {
         if (target == graphView || target == graph3dView) {
             startActivity(new Intent(this, ShowGraph.class));
         }
     }
 
-    // OnItemClickListener
+    @Override
     public void onItemClick(AdapterView parent, View view, int pos, long id) {
-	history.moveToPos(pos, input.getText().toString());
-	changeInput(history.getText());
+        history.moveToPos(pos, input.getText().toString());
+        changeInput(history.getText());
     }
-    
-    // TextWatcher
+
+    @Override
     public void afterTextChanged(Editable s) {
         // handler.removeMessages(MSG_INPUT_CHANGED);
         // handler.sendEmptyMessageDelayed(MSG_INPUT_CHANGED, 250);
         evaluate();
         /*
-	if (pendingClearResult && s.length() != 0) {
-            if (!(s.length() == 4 && s.toString().startsWith("ans"))) {
-                result.setText(null);
-            }
-            showGraph(null);
-	    pendingClearResult = false;
-	}
+        if (pendingClearResult && s.length() != 0) {
+                if (!(s.length() == 4 && s.toString().startsWith("ans"))) {
+                    result.setText(null);
+                }
+                showGraph(null);
+            pendingClearResult = false;
+        }
         */
     }
-    
+
+    @Override
     public void beforeTextChanged(CharSequence s, int start, int count, int after) {
     }
 
+    @Override
     public void onTextChanged(CharSequence s, int start, int before, int count) {
     }
 
-
-    // OnKeyListener
+    @Override
     public boolean onKey(View v, int keyCode, KeyEvent event) {
         int action = event.getAction();
         if (action == KeyEvent.ACTION_DOWN) {
@@ -286,12 +296,12 @@ public class Calculator extends Activity implements TextWatcher,
             case KeyEvent.KEYCODE_DPAD_CENTER:
                 doEnter();
                 break;
-                
+
             case KeyEvent.KEYCODE_DPAD_UP:
                 onUp();
                 break;
-                
-            case KeyEvent.KEYCODE_DPAD_DOWN:            
+
+            case KeyEvent.KEYCODE_DPAD_DOWN:
                 onDown();
                 break;
             default:
@@ -309,11 +319,11 @@ public class Calculator extends Activity implements TextWatcher,
             return false;
         }
     }
-    
+
     /*
     private Handler handler = new Handler() {
             public void handleMessage(Message msg) {
-                switch (msg.what) {                    
+                switch (msg.what) {
                 case MSG_INPUT_CHANGED:
                     // String text = input.getText().toString();
                     evaluate();
@@ -331,13 +341,13 @@ public class Calculator extends Activity implements TextWatcher,
     void evaluate() {
         evaluate(input.getText().toString());
     }
-    
+
     private String formatEval(Complex value) {
-	if (nDigits == 0) {
+        if (nDigits == 0) {
             nDigits = getResultSpace();
         }
-	String res = Util.complexToString(value, nDigits, 2);
-	return res.replace(INFINITY, INFINITY_UNICODE);
+        String res = Util.complexToString(value, nDigits, 2);
+        return res.replace(INFINITY, INFINITY_UNICODE);
     }
 
     private void evaluate(String text) {
@@ -360,12 +370,11 @@ public class Calculator extends Activity implements TextWatcher,
                 continue;
             }
         } while (end != -1);
-        
+
         graphedFunction = auxFuncs;
         int size = auxFuncs.size();
         if (size == 0) {
             result.setEnabled(false);
-            return;
         } else if (size == 1) {
             Function f = auxFuncs.get(0);
             int arity = f.arity();
@@ -393,7 +402,7 @@ public class Calculator extends Activity implements TextWatcher,
                 historyView.setVisibility(View.GONE);
                 graph3dView.setVisibility(View.GONE);
                 graph3dView.onPause();
-                graphView.setVisibility(View.VISIBLE);                
+                graphView.setVisibility(View.VISIBLE);
             }
         }
     }
@@ -406,10 +415,10 @@ public class Calculator extends Activity implements TextWatcher,
 
     private void updateAlpha() {
         alpha.setVisibility(isAlphaVisible ? View.VISIBLE: View.GONE);
-        digits.setAboveView(isAlphaVisible ? alpha : null);        
+        digits.setAboveView(isAlphaVisible ? alpha : null);
     }
 
-    private StringBuilder oneChar = new StringBuilder(" ");
+    private final StringBuilder oneChar = new StringBuilder(" "); // XXX Not thread-save
     void onKey(char key) {
         if (key == 'E') {
             doEnter();
@@ -467,30 +476,30 @@ public class Calculator extends Activity implements TextWatcher,
     }
 
     void onEnter() {
-	onEnter(input.getText().toString());
+        onEnter(input.getText().toString());
     }
 
     void onEnter(String text) {
-	boolean historyChanged = false;
-	try {
-	    FunctionAndName fan = symbols.compileWithName(text);
-	    if (fan.name != null) {
-		symbols.define(fan);
-		defs.add(text);
-	    }
-	    Function f = fan.function;
-            int arity = f.arity();
-            Complex value = null;
-            if (arity == 0) {
-                value = f.evalComplex();
-                symbols.define("ans", value);
+        boolean historyChanged = false;
+        try {
+            FunctionAndName fan = symbols.compileWithName(text);
+            if (fan.getName() != null) {
+            symbols.define(fan);
+            defs.add(text);
             }
-	    historyChanged = arity == 0 ?
-		history.onEnter(text, formatEval(value)) :
-		history.onEnter(text, null);
-	} catch (SyntaxException e) {
-	    historyChanged = history.onEnter(text, null);
-	}
+            Function f = fan.getFunction();
+                int arity = f.arity();
+                Complex value = null;
+                if (arity == 0) {
+                    value = f.evalComplex();
+                    symbols.define("ans", value);
+                }
+            historyChanged = arity == 0 ?
+            history.onEnter(text, formatEval(value)) :
+            history.onEnter(text, null);
+        } catch (SyntaxException e) {
+            historyChanged = history.onEnter(text, null);
+        }
         showGraph(null);
         if (historyChanged) {
             adapter.notifyDataSetInvalidated();
@@ -498,18 +507,18 @@ public class Calculator extends Activity implements TextWatcher,
         if (text.length() == 0) {
             result.setText(null);
         }
-	changeInput(history.getText());
+        changeInput(history.getText());
     }
-    
+
     private void changeInput(String newInput) {
         input.setText(newInput);
-	input.setSelection(newInput.length());
+        input.setSelection(newInput.length());
         /*
-	if (newInput.length() > 0) {
-	    result.setText(null);
-	} else {
-	    pendingClearResult = true;
-	}
+        if (newInput.length() > 0) {
+            result.setText(null);
+        } else {
+            pendingClearResult = true;
+        }
         */
         /*
         if (result.getText().equals("function")) {
@@ -517,7 +526,7 @@ public class Calculator extends Activity implements TextWatcher,
         }
         */
     }
-    
+
     /*
     private void updateChecked() {
         int pos = history.getListPos();
@@ -542,8 +551,8 @@ public class Calculator extends Activity implements TextWatcher,
             // updateChecked();
         }
     }
-    
-    private static final KeyEvent 
+
+    private static final KeyEvent
         KEY_DEL = new KeyEvent(0, KeyEvent.KEYCODE_DEL),
         KEY_ENTER = new KeyEvent(0, KeyEvent.KEYCODE_ENTER);
 
@@ -554,6 +563,4 @@ public class Calculator extends Activity implements TextWatcher,
     void doBackspace() {
         input.dispatchKeyEvent(KEY_DEL);
     }
-
-    
 }

@@ -8,12 +8,10 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.egl.EGLContext;
 import javax.microedition.khronos.egl.EGLDisplay;
 import javax.microedition.khronos.egl.EGLSurface;
-import javax.microedition.khronos.opengles.GL;
 import javax.microedition.khronos.opengles.GL10;
 import javax.microedition.khronos.opengles.GL11;
 
 import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
 import java.nio.ByteOrder;
 
 import android.content.Context;
@@ -29,7 +27,7 @@ abstract class GLView extends SurfaceView implements SurfaceHolder.Callback {
     private boolean paused;
     private EGL10 egl;
     private EGLDisplay display;
-    private EGLConfig config;    
+    private EGLConfig config;
     private EGLSurface surface;
     private EGLContext eglContext;
     private GL11 gl;
@@ -52,13 +50,13 @@ abstract class GLView extends SurfaceView implements SurfaceHolder.Callback {
         gl.glReadPixels(0, 0, width, height, GL10.GL_RGBA, GL10.GL_UNSIGNED_BYTE, buf);
         int data[] = new int[size];
         buf.asIntBuffer().get(data);
-        buf = null;
         Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
         bitmap.setPixels(data, size-width, -width, 0, 0, width, height);
         return bitmap;
     }
 
-    private Handler handler = new Handler() {
+    private final Handler handler = new Handler() {
+            @Override
             public void handleMessage(Message msg) {
                 glDraw();
             }
@@ -79,7 +77,7 @@ abstract class GLView extends SurfaceView implements SurfaceHolder.Callback {
         holder.setType(SurfaceHolder.SURFACE_TYPE_GPU);
         holder.addCallback(this);
     }
-    
+
     public void onResume() {
         Calculator.log("onResume " + this);
         paused = false;
@@ -98,7 +96,7 @@ abstract class GLView extends SurfaceView implements SurfaceHolder.Callback {
         display = egl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
         int[] ver = new int[2];
         egl.eglInitialize(display, ver);
-        
+
         int[] configSpec = {EGL10.EGL_NONE};
         EGLConfig[] configOut = new EGLConfig[1];
         int[] nConfig = new int[1];
@@ -145,10 +143,12 @@ abstract class GLView extends SurfaceView implements SurfaceHolder.Callback {
         }
     }
 
+    @Override
     public void surfaceCreated(SurfaceHolder holder) {
         Calculator.log("surfaceCreated " + this);
     }
-    
+
+    @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
         Calculator.log("surfaceChanged " + format + ' ' + this);
         this.width  = width;
@@ -160,6 +160,7 @@ abstract class GLView extends SurfaceView implements SurfaceHolder.Callback {
         }
     }
 
+    @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
         Calculator.log("surfaceDestroyed " + this);
         hasSurface = false;
