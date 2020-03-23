@@ -20,7 +20,7 @@
 
     <groupId>org.javia.arithmetics</groupId>
     <artifactId>android</artifactId>
-    <version>2.1.6</version>
+    <version>2.1.7-SNAPSHOT</version>
     <packaging>apk</packaging>
     <name>Arity Calculator App</name>
     <description>
@@ -121,7 +121,7 @@
         <dependency>
             <groupId>org.javia.arithmetics</groupId>
             <artifactId>arithmetics</artifactId>
-            <version>2.1.6</version>
+            <version>2.1.7-SNAPSHOT</version>
         </dependency>
     </dependencies>
 
